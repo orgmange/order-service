@@ -10,7 +10,10 @@ import (
 	"time"
 
 	"github.com/orgmange/order-service/internal/config"
+	"github.com/orgmange/order-service/internal/handler"
+	"github.com/orgmange/order-service/internal/repository"
 	"github.com/orgmange/order-service/internal/router"
+	"github.com/orgmange/order-service/internal/service"
 )
 
 func main() {
@@ -19,7 +22,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := router.SetupRouter(config)
+	userRepository := repository.NewUserRepository()
+	userService := service.NewUserService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
+
+	healthHandler := handler.NewHealthHandler(config.Version)
+	r := router.SetupRouter(*healthHandler, userHandler)
 	srv := &http.Server{
 		Addr:    config.Address + ":" + config.Port,
 		Handler: r,

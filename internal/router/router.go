@@ -2,13 +2,16 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/orgmange/order-service/internal/config"
 	"github.com/orgmange/order-service/internal/handler"
 )
 
-func SetupRouter(cfg *config.Config) *gin.Engine {
+func SetupRouter(healthHandler handler.HealthHandler, userHandler handler.UserHandler) *gin.Engine {
 	r := gin.Default()
-	healthHandler := handler.NewHealthHandler(cfg.Version)
 	r.GET("/health", healthHandler.HandleHealth)
+
+	r.GET("/users/:id", userHandler.GetUser)
+	r.PUT("/users/:id", userHandler.UpdateUser)
+	r.POST("/users", userHandler.CreateUser)
+	r.DELETE("/users/:id", userHandler.DeleteUser)
 	return r
 }
