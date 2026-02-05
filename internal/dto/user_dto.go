@@ -13,7 +13,7 @@ type UpdateUserRequest struct {
 }
 
 type UserResponse struct {
-	ID    int
+	ID    uint
 	Name  string
 	Email string
 }

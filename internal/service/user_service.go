@@ -1,10 +1,14 @@
 package service
 
-import "github.com/orgmange/order-service/internal/dto"
+import (
+	"context"
+
+	"github.com/orgmange/order-service/internal/dto"
+)
 
 type UserService interface {
-	CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse, error)
-	GetUser(id int) (*dto.UserResponse, error)
-	UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
-	DeleteUser(id int) error
+	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserResponse, error)
+	GetUser(ctx context.Context, id uint) (*dto.UserResponse, error)
+	UpdateUser(ctx context.Context, id uint, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
+	DeleteUser(ctx context.Context, id uint) error
 }

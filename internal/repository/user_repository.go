@@ -1,10 +1,14 @@
 package repository
 
-import "github.com/orgmange/order-service/internal/model"
+import (
+	"context"
+
+	"github.com/orgmange/order-service/internal/model"
+)
 
 type UserRepository interface {
-	Create(user *model.User) (*model.User, error)
-	Get(ID int) (*model.User, error)
-	Update(user *model.User) error
-	Delete(ID int) error
+	Create(ctx context.Context, user *model.User) (*model.User, error)
+	Get(ctx context.Context, ID uint) (*model.User, error)
+	Update(ctx context.Context, user *model.User) error
+	Delete(ctx context.Context, ID uint) error
 }

@@ -20,11 +20,11 @@ func NewUserHandler(s service.UserService) UserHandler {
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	id, ok := getIntFromParam("id", c)
+	id, ok := getUintFromParam("id", c)
 	if !ok {
 		return
 	}
-	user, err := h.s.GetUser(id)
+	user, err := h.s.GetUser(c.Request.Context(), id)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -34,11 +34,11 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	id, ok := getIntFromParam("id", c)
+	id, ok := getUintFromParam("id", c)
 	if !ok {
 		return
 	}
-	err := h.s.DeleteUser(id)
+	err := h.s.DeleteUser(c.Request.Context(), id)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -56,7 +56,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		})
 		return
 	}
-	user, err := h.s.CreateUser(&req)
+	user, err := h.s.CreateUser(c.Request.Context(), &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -66,7 +66,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	id, ok := getIntFromParam("id", c)
+	id, ok := getUintFromParam("id", c)
 	if !ok {
 		return
 	}
@@ -78,7 +78,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		})
 		return
 	}
-	user, err := h.s.UpdateUser(id, &req)
+	user, err := h.s.UpdateUser(c.Request.Context(), id, &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -87,9 +87,9 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func getIntFromParam(key string, c *gin.Context) (int, bool) {
+func getUintFromParam(key string, c *gin.Context) (uint, bool) {
 	valRaw := c.Param(key)
-	val, err := strconv.Atoi(valRaw)
+	val, err := strconv.ParseUint(valRaw, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "bad request",
@@ -97,7 +97,7 @@ func getIntFromParam(key string, c *gin.Context) (int, bool) {
 		return 0, false
 	}
 
-	return val, true
+	return uint(val), true
 }
 
 func handleAppErr(err error, c *gin.Context) {

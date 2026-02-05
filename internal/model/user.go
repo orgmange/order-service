@@ -7,15 +7,12 @@ import (
 )
 
 type User struct {
-	id    int
+	id    uint
 	name  string
 	email string
 }
 
-func NewUser(id int, name string, email string) (*User, error) {
-	if id < 0 {
-		return nil, fmt.Errorf("not valid id")
-	}
+func NewUser(id uint, name string, email string) (*User, error) {
 	if !util.NAME_REGEX.MatchString(name) {
 		return nil, fmt.Errorf("not valid name")
 	}
@@ -31,11 +28,11 @@ func NewUser(id int, name string, email string) (*User, error) {
 	}, nil
 }
 
-func (u *User) SetID(id int) {
+func (u *User) SetID(id uint) {
 	u.id = id
 }
 
-func (u *User) GetID() int {
+func (u *User) GetID() uint {
 	return u.id
 }
 

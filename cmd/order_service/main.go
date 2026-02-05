@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,8 +13,11 @@ import (
 	"github.com/orgmange/order-service/internal/config"
 	"github.com/orgmange/order-service/internal/handler"
 	"github.com/orgmange/order-service/internal/repository"
+	"github.com/orgmange/order-service/internal/repository/entity"
 	"github.com/orgmange/order-service/internal/router"
 	"github.com/orgmange/order-service/internal/service"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -22,7 +26,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userRepository := repository.NewUserRepository()
+	db, err := setupDB(config.DBCfg)
+	if err != nil {
+		log.Fatal("setuping DB error:", err)
+	}
+
+	userRepository := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
@@ -39,6 +48,34 @@ func main() {
 	}()
 
 	waitShutdown(srv)
+}
+
+func setupDB(dbCfg *config.DBCfg) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		dbCfg.Host,
+		dbCfg.User,
+		dbCfg.Password,
+		dbCfg.Name,
+		dbCfg.Port,
+		dbCfg.Sslmode)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	db.AutoMigrate(&entity.User{})
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlDB.SetMaxIdleConns(dbCfg.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(dbCfg.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Second * time.Duration(dbCfg.MaxConnsLifetimeSeconds))
+
+	return db, nil
 }
 
 func waitShutdown(srv *http.Server) {
