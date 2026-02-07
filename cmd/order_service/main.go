@@ -35,8 +35,12 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
+	orderRepository := repository.NewOrderRepository(db)
+	orderService := service.NewOrderService(orderRepository)
+	orderHandler := handler.NewOrderHandler(orderService)
+
 	healthHandler := handler.NewHealthHandler(config.Version)
-	r := router.SetupRouter(*healthHandler, userHandler)
+	r := router.SetupRouter(*healthHandler, userHandler, *orderHandler)
 	srv := &http.Server{
 		Addr:    config.Address + ":" + config.Port,
 		Handler: r,

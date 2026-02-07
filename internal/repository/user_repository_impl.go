@@ -49,14 +49,13 @@ func (u *UserRepositoryImpl) Get(ctx context.Context, ID uint) (*model.User, err
 
 // Update implements [UserRepository].
 func (u *UserRepositoryImpl) Update(ctx context.Context, user *model.User) error {
-	var entity entity.User
+	userEntity := entity.User{}
+	userEntity.Name = user.GetName()
+	userEntity.Email = user.GetEmail()
 
-	if err := u.db.First(&entity, user.GetID()).Error; err != nil {
-		return err
-	}
+	_, err := gorm.G[entity.User](u.db).
+		Where("id = ?", user.GetID()).
+		Updates(ctx, userEntity)
 
-	entity.Name = user.GetName()
-	entity.Email = user.GetEmail()
-
-	return u.db.Save(&entity).Error
+	return err
 }

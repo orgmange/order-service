@@ -18,7 +18,7 @@ func NewUserService(rep repository.UserRepository) UserService {
 
 // CreateUser implements [UserService].
 func (u *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserResponse, error) {
-	user, err := dto.ToUser(req)
+	user, err := req.ToUser()
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (u *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserReq
 	if err != nil {
 		return nil, err
 	}
-	return dto.ToResponse(savedUser), nil
+	return dto.ToUserResponse(savedUser), nil
 }
 
 // DeleteUser implements [UserService].
@@ -40,7 +40,7 @@ func (u *UserServiceImpl) GetUser(ctx context.Context, id uint) (*dto.UserRespon
 	if err != nil {
 		return nil, err
 	}
-	return dto.ToResponse(user), nil
+	return dto.ToUserResponse(user), nil
 }
 
 // UpdateUser implements [UserService].
@@ -64,5 +64,5 @@ func (u *UserServiceImpl) UpdateUser(ctx context.Context, id uint, req *dto.Upda
 		return nil, err
 	}
 
-	return dto.ToResponse(user), u.rep.Update(ctx, updatedUser)
+	return dto.ToUserResponse(user), u.rep.Update(ctx, updatedUser)
 }

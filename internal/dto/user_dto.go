@@ -18,11 +18,11 @@ type UserResponse struct {
 	Email string
 }
 
-func ToUser(req *CreateUserRequest) (*model.User, error) {
+func (req *CreateUserRequest) ToUser() (*model.User, error) {
 	return model.NewUser(0, req.Name, req.Email)
 }
 
-func ToResponse(user *model.User) *UserResponse {
+func ToUserResponse(user *model.User) *UserResponse {
 	return &UserResponse{
 		ID:    user.GetID(),
 		Name:  user.GetName(),
