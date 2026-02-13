@@ -1,18 +1,36 @@
-package handler
+package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/orgmange/order-service/internal/dto"
-	"github.com/orgmange/order-service/internal/service"
+	"github.com/orgmange/order-service/internal/order"
 )
 
-type OrderHandler struct {
-	s service.OrderService
+type OrderResponse struct {
+	ID        uint
+	CreatorID uint
+	Status    string
+	UpdatedAt time.Time
+	CreatedAt time.Time
 }
 
-func NewOrderHandler(s service.OrderService) *OrderHandler {
+func ToOrderResponse(order *order.Model) *OrderResponse {
+	return &OrderResponse{
+		ID:        order.GetID(),
+		CreatorID: order.GetCreatorID(),
+		Status:    string(order.GetStatus()),
+		UpdatedAt: order.GetUpdatedAt(),
+		CreatedAt: order.GetCreatedAt(),
+	}
+}
+
+type OrderHandler struct {
+	s *order.Service
+}
+
+func NewOrderHandler(s *order.Service) *OrderHandler {
 	return &OrderHandler{
 		s: s,
 	}
@@ -24,7 +42,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.s.GetOrder(c.Request.Context(), id)
+	order, err := h.s.Get(c.Request.Context(), id)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -34,7 +52,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	var req dto.CreateOrderRequest
+	var req order.CreateParam
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -44,7 +62,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.s.CreateOrder(c.Request.Context(), &req)
+	order, err := h.s.Create(c.Request.Context(), &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -54,7 +72,11 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) UpdateOrder(c *gin.Context) {
-	var req dto.UpdateOrderRequest
+	id, ok := getUintFromParam("id", c)
+	if !ok {
+		return
+	}
+	var req order.UpdateParam
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -64,11 +86,13 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 		return
 	}
 
-	err = h.s.UpdateOrder(c.Request.Context(), &req)
+	order, err := h.s.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
 	}
+
+	c.JSON(http.StatusOK, order)
 }
 
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
@@ -77,7 +101,7 @@ func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 		return
 	}
 
-	err := h.s.DeleteOrder(c.Request.Context(), id)
+	err := h.s.Delete(c.Request.Context(), id)
 	if err != nil {
 		handleAppErr(err, c)
 		return

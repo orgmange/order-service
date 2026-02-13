@@ -11,11 +11,9 @@ import (
 	"time"
 
 	"github.com/orgmange/order-service/internal/config"
-	"github.com/orgmange/order-service/internal/handler"
-	"github.com/orgmange/order-service/internal/repository"
-	"github.com/orgmange/order-service/internal/repository/entity"
-	"github.com/orgmange/order-service/internal/router"
-	"github.com/orgmange/order-service/internal/service"
+	"github.com/orgmange/order-service/internal/order"
+	handler "github.com/orgmange/order-service/internal/transport/http"
+	"github.com/orgmange/order-service/internal/user"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -31,16 +29,16 @@ func main() {
 		log.Fatal("setuping DB error:", err)
 	}
 
-	userRepository := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepository)
+	userRepository := user.NewGormRepository(db)
+	userService := user.NewService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
-	orderRepository := repository.NewOrderRepository(db)
-	orderService := service.NewOrderService(orderRepository)
+	orderRepository := order.NewGormRepository(db)
+	orderService := order.NewService(orderRepository)
 	orderHandler := handler.NewOrderHandler(orderService)
 
 	healthHandler := handler.NewHealthHandler(config.Version)
-	r := router.SetupRouter(*healthHandler, userHandler, *orderHandler)
+	r := handler.SetupRouter(*healthHandler, userHandler, *orderHandler)
 	srv := &http.Server{
 		Addr:    config.Address + ":" + config.Port,
 		Handler: r,
@@ -68,7 +66,8 @@ func setupDB(dbCfg *config.DBCfg) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&entity.User{})
+	db.AutoMigrate(&user.Entity{})
+	db.AutoMigrate(&order.Entity{})
 
 	sqlDB, err := db.DB()
 	if err != nil {

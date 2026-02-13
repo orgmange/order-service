@@ -1,19 +1,17 @@
-package handler
+package http
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/orgmange/order-service/internal/dto"
-	"github.com/orgmange/order-service/internal/service"
+	"github.com/orgmange/order-service/internal/user"
 )
 
 type UserHandler struct {
-	s service.UserService
+	s *user.Service
 }
 
-func NewUserHandler(s service.UserService) UserHandler {
+func NewUserHandler(s *user.Service) UserHandler {
 	return UserHandler{
 		s: s,
 	}
@@ -38,7 +36,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	if !ok {
 		return
 	}
-	err := h.s.DeleteUser(c.Request.Context(), id)
+	err := h.s.Delete(c.Request.Context(), id)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -48,7 +46,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var req dto.CreateUserRequest
+	var req user.CreateParam
 	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -56,7 +54,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		})
 		return
 	}
-	user, err := h.s.CreateUser(c.Request.Context(), &req)
+	user, err := h.s.Create(c.Request.Context(), &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
@@ -70,7 +68,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	if !ok {
 		return
 	}
-	var req dto.UpdateUserRequest
+	var req user.UpdateParam
 	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -78,30 +76,11 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		})
 		return
 	}
-	user, err := h.s.UpdateUser(c.Request.Context(), id, &req)
+	user, err := h.s.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		handleAppErr(err, c)
 		return
 	}
 
 	c.JSON(http.StatusOK, user)
-}
-
-func getUintFromParam(key string, c *gin.Context) (uint, bool) {
-	valRaw := c.Param(key)
-	val, err := strconv.ParseUint(valRaw, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "bad request",
-		})
-		return 0, false
-	}
-
-	return uint(val), true
-}
-
-func handleAppErr(err error, c *gin.Context) {
-	c.JSON(http.StatusInternalServerError, gin.H{
-		"error": err.Error(),
-	})
 }

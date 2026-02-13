@@ -1,13 +1,12 @@
-package router
+package http
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/orgmange/order-service/internal/handler"
 )
 
-func SetupRouter(healthHandler handler.HealthHandler,
-	userHandler handler.UserHandler,
-	orderHandler handler.OrderHandler,
+func SetupRouter(healthHandler HealthHandler,
+	userHandler UserHandler,
+	orderHandler OrderHandler,
 ) *gin.Engine {
 	r := gin.Default()
 	r.GET("/health", healthHandler.HandleHealth)
